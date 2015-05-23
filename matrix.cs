@@ -59,7 +59,7 @@ public class Matrix
             {
                 for (int j = 0; j < column; j++)
                 {
-                    m.array[j, i] = array[i, j];
+                    m[j, i] = array[i, j];
                 }
             }
 
@@ -85,7 +85,7 @@ public class Matrix
             {
                 for (int j = 0; j < column; j++)
                 {
-                    m.array[i, j] = Cofactor(array, i, j) / det;
+                    m[i, j] = Cofactor(array, i, j) / det;
                 }
             }
 
@@ -165,7 +165,7 @@ public class Matrix
             {
                 for (int j = 0; j < m1.column; j++)
                 {
-                    m.array[i, j] = m1.array[i, j] + m2.array[i, j];
+                    m[i, j] = m1[i, j] + m2[i, j];
                 }
             }
 
@@ -185,7 +185,7 @@ public class Matrix
             {
                 for (int j = 0; j < m1.column; j++)
                 {
-                    m.array[i, j] = m1.array[i, j] - m2.array[i, j];
+                    m[i, j] = m1[i, j] - m2[i, j];
                 }
             }
 
@@ -215,10 +215,10 @@ public class Matrix
 
                     for (int k = 0; k < m1.column; k++)
                     {
-                        sum += m1.array[i, k] * m2.array[k, j];
+                        sum += m1[i, k] * m2[k, j];
                     }
 
-                    m.array[i, j] = sum;
+                    m[i, j] = sum;
                 }
             }
 
