@@ -192,10 +192,36 @@ public class Matrix
             return m;
         }
 
-        public int this[int index1, int index2]
+        public static Matrix operator *(int a, Matrix m1)
         {
-            get { return array[index1, index2]; }
-            private set { array[index1, index2] = value; }
+            Matrix m = new Matrix(m1.row, m1.column);
+            for (int i = 0; i < m1.row; i++)
+            {
+                for (int j = 0; j < m1.column; j++)
+                {
+                    m[i, j] = a * m1[i, j];
+                }
+            }
+
+            return m;
+        }
+
+        public static Matrix operator ^(Matrix m1, int a)
+        {
+            if (m1.column != m1.row || a < 2)
+            {
+                throw new Exception("Возведение в степень невозможно");
+            } 
+
+            Matrix m = new Matrix(m1.row, m1.column);
+
+            m = m1 * m1;
+            for (int i = 1; i < a - 1; i++)
+            {
+                m = m1 * m;
+            }
+
+            return m;
         }
 
         public static Matrix operator *(Matrix m1, Matrix m2)
@@ -223,6 +249,12 @@ public class Matrix
             }
 
             return m;
+        }
+
+        public int this[int index1, int index2]
+        {
+            get { return array[index1, index2]; }
+            private set { array[index1, index2] = value; }
         }
 
         public override string ToString()
