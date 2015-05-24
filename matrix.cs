@@ -1,8 +1,8 @@
-public class Matrix
+    public class Matrix
     {
         static Random rnd = new Random();
 
-        int[,] array;
+        decimal[,] array;
         int row, column;
 
         public int Row { get { return row; } }
@@ -34,14 +34,14 @@ public class Matrix
         {
             this.row = row;
             this.column = colunm;
-            array = new int[row, column];
+            array = new decimal[row, column];
         }
 
-        public Matrix(int row, int colunm, int[,] m)
+        public Matrix(int row, int colunm, decimal[,] m)
         {
             this.row = row;
             this.column = colunm;
-            array = new int[row, column];
+            array = new decimal[row, column];
             for (int i = 0; i < row; i++)
             {
                 for (int j = 0; j < column; j++)
@@ -73,7 +73,7 @@ public class Matrix
 
         public Matrix Inverse()
         {
-            int det = Determinant();
+            decimal det = Determinant();
             if (det == 0)
             {
                 throw new Exception("Матрица вырождена");
@@ -92,7 +92,7 @@ public class Matrix
             return m.Transpose();
         }
 
-        public int Determinant()
+        public decimal Determinant()
         {
             if (column != row)
             {
@@ -101,7 +101,7 @@ public class Matrix
             return Determinant(array);
         }
 
-        private int Determinant(int[,] array)
+        private decimal Determinant(decimal[,] array)
         {
             int n = (int)Math.Sqrt(array.Length);
 
@@ -110,7 +110,7 @@ public class Matrix
                 return array[0, 0];
             }
 
-            int det = 0;
+            decimal det = 0;
 
             for (int k = 0; k < n; k++)
             {
@@ -120,15 +120,15 @@ public class Matrix
             return det;
         }
 
-        private int Cofactor(int[,] array, int row, int column)
+        private decimal Cofactor(decimal[,] array, int row, int column)
         {
             return Convert.ToInt32(Math.Pow(-1, column + row)) * Determinant(Minor(array, row, column));
         }
 
-        private int[,] Minor(int[,] array, int row, int column)
+        private decimal[,] Minor(decimal[,] array, int row, int column)
         {
             int n = (int)Math.Sqrt(array.Length);
-            int[,] minor = new int[n - 1, n - 1];
+            decimal[,] minor = new decimal[n - 1, n - 1];
 
             int _i = 0;
             for (int i = 0; i < n; i++)
@@ -192,7 +192,7 @@ public class Matrix
             return m;
         }
 
-        public static Matrix operator *(int a, Matrix m1)
+        public static Matrix operator *(decimal a, Matrix m1)
         {
             Matrix m = new Matrix(m1.row, m1.column);
             for (int i = 0; i < m1.row; i++)
@@ -204,6 +204,21 @@ public class Matrix
             }
 
             return m;
+        }
+
+        public static Matrix operator *(Matrix m1, decimal a)
+        {
+            return Convert.ToDecimal(a) * m1;
+        }
+
+        public static Matrix operator *(int a, Matrix m1)
+        {
+            return Convert.ToDecimal(a) * m1;
+        }
+
+        public static Matrix operator *(double a, Matrix m1)
+        {
+            return Convert.ToDecimal(a) * m1;
         }
 
         public static Matrix operator ^(Matrix m1, int a)
@@ -237,7 +252,7 @@ public class Matrix
             {
                 for (int j = 0; j < m2.column; j++)
                 {
-                    int sum = 0;
+                    decimal sum = 0;
 
                     for (int k = 0; k < m1.column; k++)
                     {
@@ -251,7 +266,7 @@ public class Matrix
             return m;
         }
 
-        public int this[int index1, int index2]
+        public decimal this[int index1, int index2]
         {
             get { return array[index1, index2]; }
             private set { array[index1, index2] = value; }
