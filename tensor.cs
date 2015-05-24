@@ -62,7 +62,7 @@ class Tensor
 
         public string WriteToLaTex(string name)
         {
-            string str = "\n"+@"$$" + name + @" =\ \large\left(\begin{array}{";
+            string str = "\n" + @"$$" + name + @" =\ \large\left(\begin{array}{";
 
             for (int i = 0; i < row; i++)
             {
@@ -125,6 +125,7 @@ class Tensor
                                     {
                                         for (int s = 0; s < dim; s++)
                                         {
+                                            //для тензоров типа (1;3)
                                             temp[i, j, k, m] += tensor[p][q][r][s] * transition_matrix[s, m] * transition_matrix[p, i] * transition_matrix[q, j] * D[k, r];
                                         }
                                     }
@@ -134,46 +135,6 @@ class Tensor
                     }
                 }
             }
-            return temp;
-        }
-
-        public Tensor ToNewBasis(Matrix C, Matrix D, out string Solve)
-        {
-            string str = ""; string[] z = new string[]{"","",""};
-            var temp = new Tensor(row, column, dim);
-            for (int i = 0; i < row; i++)
-            {
-                for (int j = 0; j < column; j++)
-                {
-                    for (int k = 0; k < dim; k++)
-                    {
-                        for (int m = 0; m < dim; m++)
-                        {
-                            str += "\n"+@"$$\overline{\tau} ^{"+(k+1)+"}_{"+(m+1)+(i+1)+(j+1)+"}=";
-                            for (int p = 0; p < row; p++)
-                            {
-                                for (int q = 0; q < column; q++)
-                                {
-                                    for (int r = 0; r < dim; r++)
-                                    {
-                                        for (int s = 0; s < dim; s++)
-                                        {
-                                            temp[i, j, k, m] += tensor[p][q][r][s] * C[s, m] * C[p, i] * C[q, j] * D[k, r];
-                                            
-                                            z[0] += @"+{\tau}^{" + (r + 1) + "}_{" + (s + 1) + (p + 1) + (q + 1) + "} C^{" + (s + 1) + "}_{" + (m + 1) + "} C^{" + (p + 1) + "}_{" + (i + 1) + "} C^{" + (q + 1) + "}_{" + (j + 1) + "} D^{" + (k + 1) + "}_{" + (r + 1) + "}";
-                                            z[1] += "+" + tensor[p][q][r][s] + "*" + C[s, m] + "*" + C[p, i] + "*" + C[q, j] + "*" + D[k, r];
-                                            z[2] += "+" + tensor[p][q][r][s] * C[s, m] * C[p, i] * C[q, j] * D[k, r];
-                                        }
-                                    }
-                                }
-                            }
-                            str += z[0].Substring(1, z[0].Length - 1) + " = " + z[1].Substring(1, z[1].Length - 1) + " = " + z[2].Substring(1, z[2].Length - 1) + " = " + temp[i, j, k, m] + "$$\n";
-                            z[0] = ""; z[1]= ""; z[2] = "";
-                        }
-                    }
-                }
-            }
-            Solve = str;
             return temp;
         }
 
@@ -189,7 +150,7 @@ class Tensor
                     textFromFile = sr.ReadToEnd();
                 }
                 string[] temp = textFromFile.Split(new Char[] { '*' });
-                //запись
+
                 foreach (var item in temp)
                 {
                     var row = new List<List<List<decimal>>>();
