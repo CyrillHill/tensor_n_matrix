@@ -1,17 +1,26 @@
-class Tensor
+    struct Type
     {
+        public int p { get; set; }
+        public int q { get; set; }
+    }
+
+    partial class Tensor
+    {
+
         int row, column, dim;
+        Type type;
 
         public int Row { get { return row; } }
         public int Column { get { return column; } }
         public int Dim { get { return dim; } }
 
         List<List<List<List<decimal>>>> tensor;
-        public Tensor(int row, int column, int dim)
+        public Tensor(int row, int column, int dim, Type type)
         {
             this.row = row;
             this.column = column;
             this.dim = dim;
+            this.type = type;
             tensor = new List<List<List<List<decimal>>>>();
             for (int i = 0; i < row; i++)
             {
@@ -84,15 +93,15 @@ class Tensor
                     {
                         for (int m = 0; m < dim; m++)
                         {
-                            z += tensor[i][k][j][m] + "&";
+                            z += string.Format("{0} &", tensor[i][k][j][m]);
                         }
                     }
-                    str += z.Substring(0,z.Length-1)+"\\\\";
+                    str += z.Substring(0, z.Length - 1) + "\\\\";
                     z = "";
                 }
                 str += @"\hline";
             }
-            str=str.Substring(0,str.Length-8);
+            str = str.Substring(0, str.Length - 8);
             str += @"\end{array}\right)$$";
 
             return str;
@@ -108,7 +117,7 @@ class Tensor
         {
             Matrix D = new Matrix(dim, dim);
             D = transition_matrix.Inverse();
-            var temp = new Tensor(row, column, dim);
+            var temp = new Tensor(row, column, dim, type);
             for (int i = 0; i < row; i++)
             {
                 for (int j = 0; j < column; j++)
@@ -125,8 +134,14 @@ class Tensor
                                     {
                                         for (int s = 0; s < dim; s++)
                                         {
-                                            //для тензоров типа (1;3)
-                                            temp[i, j, k, m] += tensor[p][q][r][s] * transition_matrix[s, m] * transition_matrix[p, i] * transition_matrix[q, j] * D[k, r];
+                                            if (type.p > type.q)
+                                                temp[i, j, k, m] += tensor[p][q][r][s] * transition_matrix[s, m] * transition_matrix[p, i] * transition_matrix[q, j] * D[k, r];
+
+                                            if (type.p < type.q)
+                                                temp[i, j, k, m] += tensor[p][q][r][s] * transition_matrix[q, j] * D[k, r] * D[m, s] * D[i, p];
+
+                                            if (type.p == type.q)
+                                                temp[i, j, k, m] += tensor[p][q][r][s] * transition_matrix[r, k] * transition_matrix[s, m] * D[q, j] * D[k, r];
                                         }
                                     }
                                 }
@@ -135,6 +150,71 @@ class Tensor
                     }
                 }
             }
+            return temp;
+        }
+
+        public Tensor ToNewBasis(Matrix C, Matrix D, out string Solve)
+        {
+            string str = ""; string[] z = new string[] { "", "", "" };
+            var temp = new Tensor(row, column, dim, type);
+            for (int i = 0; i < row; i++)
+            {
+                for (int j = 0; j < column; j++)
+                {
+                    for (int k = 0; k < dim; k++)
+                    {
+                        for (int m = 0; m < dim; m++)
+                        {
+                            str += "\n" + @"$$\overline{\tau} ^{";
+                            if (type.p > type.q)
+                                str += (k + 1)+"}_{"+ (m + 1)+ (i + 1) +(j + 1);
+                            if (type.p < type.q)
+                                str += "" + (k + 1) + "" + (m + 1) + "" + (i + 1) + "}_{" + (j + 1);
+                            if (type.p == type.q)
+                                str += (k + 1) + "" + (m + 1) + "}_{" + (i + 1) + (j + 1);
+                            str += "}=";
+                            for (int p = 0; p < row; p++)
+                            {
+                                for (int q = 0; q < column; q++)
+                                {
+                                    for (int r = 0; r < dim; r++)
+                                    {
+                                        for (int s = 0; s < dim; s++)
+                                        {
+                                            if (type.p > type.q)
+                                            {
+                                                temp[i, j, k, m] += tensor[p][q][r][s] * C[s, m] * C[p, i] * C[q, j] * D[k, r];
+                                                z[0] += @"+{\tau}^{" + (r + 1) + "}_{" + (s + 1) + (p + 1) + (q + 1) + "} C^{" + (s + 1) + "}_{" + (m + 1) + "} C^{" + (p + 1) + "}_{" + (i + 1) + "} C^{" + (q + 1) + "}_{" + (j + 1) + "} D^{" + (k + 1) + "}_{" + (r + 1) + "}";
+                                                z[1] += "+" + tensor[p][q][r][s] + "*" + C[s, m] + "*" + C[p, i] + "*" + C[q, j] + "*" + D[k, r];
+                                                
+                                            }
+                                            if (type.p < type.q)
+                                            {
+                                                temp[i, j, k, m] += tensor[p][q][r][s] * C[q, j] * D[k, r] * D[m, s] * D[i, p];
+                                                z[0] += @"+{\tau}^{" + (r + 1) + (s + 1) + (p + 1) + "}_{" + (q + 1) + "} C^{" + (q + 1) + "}_{" + (j + 1) + "} D^{" + (k + 1) + "}_{" + (r + 1) + "} D^{" + (m + 1) + "}_{" + (s + 1) + "} D^{" + (i + 1) + "}_{" + (p + 1) + "}";
+                                                z[1] += "+" + tensor[p][q][r][s] + "*" + C[q, j] + "*" + D[k, r] + "*" + D[m, s] + "*" + D[i, p];
+                                                
+                                            }
+                                            if (type.p == type.q)
+                                            {
+                                                temp[i, j, k, m] += tensor[p][q][r][s] * C[r, k] * C[s, m] * D[q, j] * D[k, r];
+                                                z[0] += @"+{\tau}^{" + (r + 1) + (s + 1) + "}_{"+(p + 1) + (q + 1) + "} C^{" + (r + 1) + "}_{" + (k + 1) + "} C^{" + (s + 1) + "}_{" + (m + 1) + "} D^{" + (q + 1) + "}_{" + (j + 1) + "} D^{" + (k + 1) + "}_{" + (r + 1) + "}";
+                                                z[1] += "+" + tensor[p][q][r][s] + "*" + C[r, k] + "*" + C[s, m] + "*" + D[q, j] + "*" + D[k, r];
+                                                
+                                            }
+
+                                            z[2] += "+" + temp[i, j, k, m];
+                                        }
+                                    }
+                                }
+                            }
+                            str += z[0].Substring(1, z[0].Length - 1) + " = " + z[1].Substring(1, z[1].Length - 1) + " = " + z[2].Substring(1, z[2].Length - 1) + " = " + temp[i, j, k, m] + "$$\n";
+                            z[0] = ""; z[1] = ""; z[2] = "";
+                        }
+                    }
+                }
+            }
+            Solve = str;
             return temp;
         }
 
@@ -183,7 +263,7 @@ class Tensor
                 throw new Exception("Сложение невозможно");
             }
 
-            Tensor t = new Tensor(t1.row, t1.column, t1.dim);
+            Tensor t = new Tensor(t1.row, t1.column, t1.dim, t1.type);
 
 
             for (int i = 0; i < t.row; i++)
@@ -210,7 +290,33 @@ class Tensor
                 throw new Exception("Сложение невозможно");
             }
 
-            Tensor t = new Tensor(t1.row, t1.column, t1.dim);
+            Tensor t = new Tensor(t1.row, t1.column, t1.dim, t1.type);
+
+
+            for (int i = 0; i < t.row; i++)
+            {
+                for (int j = 0; j < t.column; j++)
+                {
+                    for (int k = 0; k < t.dim; k++)
+                    {
+                        for (int m = 0; m < t.dim; m++)
+                        {
+                            t[i, j, k, m] = t1[i, j, k, m] - t2[i, j, k, m];
+                        }
+                    }
+                }
+            }
+
+            return t;
+        }
+        public static Tensor operator *(Tensor t1, Tensor t2)
+        {
+            if (t1.row != t2.row || t1.column != t2.column)
+            {
+                throw new Exception("Сложение невозможно");
+            }
+
+            Tensor t = new Tensor(t1.row, t1.column, t1.dim, t1.type);
 
 
             for (int i = 0; i < t.row; i++)
